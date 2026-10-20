@@ -45,31 +45,85 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
 
     const cards = Array.from(track.querySelectorAll<HTMLElement>("[data-gallery-card]"));
     const artwork = Array.from(track.querySelectorAll<HTMLElement>("[data-gallery-art]"));
+    const setArtworkFilters = artwork.map((layer) => gsap.quickSetter(layer, "filter"));
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reduceMotion = motionPreference.matches;
+    let compactLayout = false;
     let cardStep = 0;
     let draggable: Draggable | null = null;
     let intro: gsap.core.Timeline | null = null;
     let introTrigger: ScrollTrigger | null = null;
+    let blurTween: gsap.core.Tween | null = null;
+    let blurAmount = 0;
     let geometryInitialized = false;
 
-    const renderPosition = (position: number, velocity = 0) => {
+    const applyArtworkBlur = (amount: number) => {
+      blurAmount = amount;
+      const maxBlur = compactLayout ? 1 : 2;
+
+      cards.forEach((_, index) => {
+        const distance = Math.abs(wrapOffset(index - positionRef.current, projects.length));
+        if (distance > 2.5) {
+          setArtworkFilters[index]?.("none");
+          return;
+        }
+
+        const depthWeight = clamp(0.38 + Math.min(distance, 2) * 0.25, 0.38, 0.88);
+        const blur = amount * maxBlur * depthWeight;
+        setArtworkFilters[index]?.(blur < 0.04 ? "none" : `blur(${blur.toFixed(2)}px)`);
+      });
+    };
+
+    const releaseArtworkBlur = (immediate = false) => {
+      blurTween?.kill();
+      blurTween = null;
+
+      if (immediate || reduceMotion || blurAmount < 0.015) {
+        applyArtworkBlur(0);
+        return;
+      }
+
+      const release = { amount: blurAmount };
+      blurTween = gsap.to(release, {
+        amount: 0,
+        duration: 0.24,
+        ease: "power2.out",
+        onUpdate: () => applyArtworkBlur(release.amount),
+        onComplete: () => {
+          blurTween = null;
+          applyArtworkBlur(0);
+        },
+      });
+    };
+
+    const trackArtworkBlur = (velocity: number) => {
+      blurTween?.kill();
+      blurTween = null;
+      const speed = reduceMotion ? 0 : clamp(Math.abs(velocity) / 1850, 0, 1);
+      applyArtworkBlur(speed);
+    };
+
+    const renderPosition = (position: number, velocity = 0, updateBlur = true) => {
       positionRef.current = position;
-      const motion = clamp(velocity / 1500, -1, 1);
+      const motion = clamp(velocity / 1850, -1, 1);
+      const speed = Math.abs(motion);
+
+      if (updateBlur) trackArtworkBlur(velocity);
 
       cards.forEach((card, index) => {
         const offset = wrapOffset(index - position, projects.length);
         const distance = Math.abs(offset);
-        const depthCurve = Math.pow(distance, 1.35);
+        const depthCurve = Math.pow(distance, 1.18);
+        const velocityDepth = speed * (distance === 0 ? 10 : 16 + Math.min(distance, 2) * 5);
 
         gsap.set(card, {
           xPercent: -50,
           yPercent: -50,
           x: offset * cardStep,
-          y: -Math.pow(distance, 1.65) * 10,
-          z: -depthCurve * 82 - Math.abs(motion) * 8,
-          rotationY: clamp(-offset * 23 + motion * 1.6, -64, 64),
-          scale: Math.max(0.52, 1 - distance * 0.09),
+          y: -Math.pow(distance, 1.58) * 11,
+          z: 38 - depthCurve * 138 - velocityDepth,
+          rotationY: clamp(-offset * 30 + motion * (3.8 + Math.min(distance, 2) * 1.25), -70, 70),
+          scale: Math.max(0.58, 1 - Math.min(distance, 4) * 0.09),
           opacity: Math.max(0.26, 1 - distance * 0.18),
           zIndex: Math.round(100 - distance * 10),
           transformOrigin: "50% 50%",
@@ -83,7 +137,8 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
       positionRef.current = snappedIndex;
       gsap.set(proxy, { x: -snappedIndex * cardStep });
       draggable?.update();
-      renderPosition(snappedIndex);
+      renderPosition(snappedIndex, 0, false);
+      releaseArtworkBlur();
       setActiveIndex(snappedIndex);
     };
 
@@ -123,6 +178,7 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
     };
 
     const setupDraggable = () => {
+      draggable?.tween?.kill();
       draggable?.kill();
       draggable = null;
 
@@ -141,6 +197,8 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
         snap: (value) => Math.round(value / cardStep) * cardStep,
         onPress() {
           gsap.killTweensOf(proxy);
+          blurTween?.kill();
+          blurTween = null;
         },
         onClick(event) {
           const pointer = event as MouseEvent;
@@ -182,11 +240,11 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
       const width = stage.clientWidth;
       if (!width) return;
 
-      const compact = width < 700;
-      const cardWidth = compact
+      compactLayout = width < 700;
+      const cardWidth = compactLayout
         ? Math.min(width - 24, Math.max(248, width * 0.76))
         : Math.min(540, Math.max(300, width * 0.39));
-      cardStep = cardWidth * (compact ? 0.78 : 0.89);
+      cardStep = cardWidth * (compactLayout ? 0.78 : 0.89);
       stage.style.setProperty("--gallery-card-width", `${cardWidth}px`);
       track.style.pointerEvents = "none";
       cards.forEach((card) => {
@@ -215,13 +273,21 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
 
       draggable?.tween?.kill();
       gsap.killTweensOf(proxy);
+      let lastX = Number(gsap.getProperty(proxy, "x"));
+      let lastTime = performance.now();
       gsap.to(proxy, {
         x: -snappedPosition * cardStep,
-        duration: 0.68,
-        ease: "power3.inOut",
+        duration: 0.72,
+        ease: "power2.inOut",
         onUpdate: () => {
           draggable?.update();
-          renderPosition(-Number(gsap.getProperty(proxy, "x")) / cardStep);
+          const currentX = Number(gsap.getProperty(proxy, "x"));
+          const currentTime = performance.now();
+          const elapsed = clamp((currentTime - lastTime) / 1000, 1 / 240, 0.05);
+          const velocity = (currentX - lastX) / elapsed;
+          renderPosition(-currentX / cardStep, velocity);
+          lastX = currentX;
+          lastTime = currentTime;
         },
         onComplete: () => settlePosition(targetIndex),
       });
@@ -241,6 +307,7 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
       reduceMotion = event.matches;
       stage.classList.toggle("curved-gallery-stage--reduced", reduceMotion);
       setupDraggable();
+      releaseArtworkBlur(reduceMotion);
       if (reduceMotion) {
         gsap.killTweensOf(proxy);
         settlePosition(positionRef.current);
@@ -261,10 +328,14 @@ export function CurvedProjectGallery({ projects }: CurvedProjectGalleryProps) {
       resizeObserver.disconnect();
       stage.removeEventListener("keydown", handleKeyDown);
       motionPreference.removeEventListener("change", handleMotionPreferenceChange);
+      draggable?.tween?.kill();
       draggable?.kill();
+      gsap.killTweensOf(proxy);
+      blurTween?.kill();
       clearIntro();
       context.revert();
       gsap.set(cards, { clearProps: "transform,opacity,zIndex" });
+      gsap.set(artwork, { clearProps: "filter" });
       goToPositionRef.current = () => undefined;
       stage.classList.remove(
         "curved-gallery-stage--enhanced",

@@ -472,7 +472,7 @@ textarea:focus-visible {
   position: relative;
   height: clamp(340px, 28vw, 420px);
   overflow: hidden;
-  perspective: 1450px;
+  perspective: 1280px;
   perspective-origin: 50% 44%;
   touch-action: pan-y;
   outline: none;
@@ -511,11 +511,12 @@ textarea:focus-visible {
   overflow: hidden;
   border: 1px solid rgba(28, 27, 25, 0.1);
   background: var(--surface);
-  box-shadow: 0 22px 48px rgba(31, 29, 25, 0.11), 0 4px 12px rgba(31, 29, 25, 0.055);
+  box-shadow: 0 18px 40px rgba(31, 29, 25, 0.1), 0 4px 12px rgba(31, 29, 25, 0.05);
   scroll-snap-align: center;
   text-decoration: none;
   backface-visibility: hidden;
   -webkit-tap-highlight-color: transparent;
+  transition: box-shadow 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .curved-gallery-card-action {
@@ -587,7 +588,10 @@ textarea:focus-visible {
 }
 
 .curved-gallery-stage--enhanced .curved-gallery-card[aria-current="true"] {
-  box-shadow: 0 25px 56px rgba(31, 29, 25, 0.15), 0 5px 14px rgba(31, 29, 25, 0.075);
+  box-shadow:
+    0 26px 56px rgba(31, 29, 25, 0.12),
+    0 6px 16px rgba(31, 29, 25, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .curved-gallery-drag-proxy {
@@ -715,7 +719,7 @@ textarea:focus-visible {
   .curved-gallery-stage {
     --static-gallery-card-width: min(76vw, 320px);
     height: clamp(320px, 88vw, 370px);
-    perspective: 1050px;
+    perspective: 960px;
     perspective-origin: 50% 44%;
   }
 
@@ -778,6 +782,10 @@ textarea:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .curved-gallery-stage--enhanced .curved-gallery-card {
+    transition: none;
+  }
+
   .curved-gallery-open,
   .curved-gallery-control {
     transition: none;
