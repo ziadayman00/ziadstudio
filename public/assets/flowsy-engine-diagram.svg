@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Flowsy Safe-to-Spend system diagram</title>
+  <desc id="desc">Liquid balance minus pending commitments equals the amount that can safely be spent. Monetary values use Decimal 14,2 precision.</desc>
+  <rect width="1200" height="760" fill="#F1F4F8"/>
+  <g stroke="#DCE3EC" stroke-width="1" opacity=".55">
+    <path d="M0 152H1200M0 304H1200M0 456H1200M0 608H1200"/>
+    <path d="M150 0V760M300 0V760M450 0V760M600 0V760M750 0V760M900 0V760M1050 0V760"/>
+  </g>
+  <g fill="#546276" font-family="Arial, Helvetica, sans-serif" font-size="15" letter-spacing="2.4">
+    <text x="72" y="64">FLOWSY / CASHFLOW SYSTEM</text>
+    <text x="1128" y="64" text-anchor="end">SYSTEM DIAGRAM · 01</text>
+  </g>
+  <path d="M72 94H1128" stroke="#BFC9D6"/>
+  <text x="72" y="184" fill="#111923" font-family="Arial, Helvetica, sans-serif" font-size="58" letter-spacing="-2.8">Safe to spend.</text>
+  <text x="74" y="226" fill="#667386" font-family="Arial, Helvetica, sans-serif" font-size="20">A clear balance after upcoming commitments are accounted for.</text>
+  <g>
+    <rect x="72" y="300" width="296" height="252" fill="#FBFCFD" stroke="#D5DDE7"/>
+    <rect x="452" y="300" width="296" height="252" fill="#FBFCFD" stroke="#D5DDE7"/>
+    <rect x="832" y="300" width="296" height="252" fill="#E8EEF9" stroke="#AEBEDE"/>
+    <rect x="832" y="300" width="4" height="252" fill="#4168C8"/>
+  </g>
+  <g fill="#617085" font-family="Arial, Helvetica, sans-serif" font-size="14" letter-spacing="1.8">
+    <text x="100" y="342">01 / AVAILABLE FUNDS</text>
+    <text x="480" y="342">02 / UPCOMING OBLIGATIONS</text>
+    <text x="860" y="342" fill="#355AAE">03 / SPENDABLE AMOUNT</text>
+  </g>
+  <g fill="#151D29" font-family="Arial, Helvetica, sans-serif" font-size="31" letter-spacing="-1">
+    <text x="100" y="414">Liquid</text><text x="100" y="452">balance</text>
+    <text x="480" y="414">Pending</text><text x="480" y="452">commitments</text>
+    <text x="860" y="414">Safe to</text><text x="860" y="452">spend</text>
+  </g>
+  <g fill="#4168C8" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="300" text-anchor="middle">
+    <text x="410" y="438">−</text>
+    <text x="790" y="438">=</text>
+  </g>
+  <g fill="#667386" font-family="Arial, Helvetica, sans-serif" font-size="15">
+    <text x="100" y="510">Accounts classified by liquidity</text>
+    <text x="480" y="510">Recurring bills and loan obligations</text>
+    <text x="860" y="510">Forecasted with exact decimal math</text>
+  </g>
+  <path d="M72 620H1128" stroke="#BFC9D6"/>
+  <g fill="#546276" font-family="Arial, Helvetica, sans-serif" font-size="13" letter-spacing="1.4">
+    <text x="72" y="664">ARITHMETIC</text>
+    <text x="72" y="692" fill="#151D29" font-size="16" letter-spacing="0">Decimal(14,2) precision</text>
+    <text x="470" y="664">ARCHITECTURE</text>
+    <text x="470" y="692" fill="#151D29" font-size="16" letter-spacing="0">Modular monolith · PostgreSQL</text>
+    <text x="1128" y="692" text-anchor="end" fill="#355AAE">LIQUID BALANCE − COMMITMENTS</text>
+  </g>
+</svg>
